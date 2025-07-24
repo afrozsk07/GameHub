@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}Anagram Puzzle - GameHub{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600">Anagram Puzzle</h1>
+    
+    <!-- Game Mode Selection -->
+    <div id="mode-selection" class="mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-center">Select Difficulty</h2>
+        <div class="flex justify-center space-x-4">
+            <button class="difficulty-btn px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn px-6 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn px-6 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600" data-difficulty="hard">Hard</button>
+        </div>
+    </div>
+
+    <!-- Game Stats -->
+    <div id="game-area" class="hidden">
+        <div class="flex justify-between mb-8">
+            <div class="text-center">
+                <p class="text-gray-600">Score</p>
+                <p id="score" class="text-2xl font-bold text-indigo-600">0</p>
+            </div>
+            <div class="text-center">
+                <p class="text-gray-600">Time</p>
+                <p id="timer" class="text-2xl font-bold text-indigo-600">0:00</p>
+            </div>
+            <div class="text-center">
+                <p class="text-gray-600">Level</p>
+                <p id="level" class="text-2xl font-bold text-indigo-600">1</p>
+            </div>
+            <div class="text-center">
+                <button id="end-game-btn" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    End Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Word Display -->
+        <div class="text-center mb-8">
+            <p class="text-gray-600 mb-2">Unscramble this word:</p>
+            <div id="scrambled-word" class="text-4xl font-bold tracking-[1em] text-indigo-600 mb-4 py-4"></div>
+            <div id="hint-area" class="mb-4">
+                <div class="flex items-center justify-center space-x-2">
+                    <button id="hint-btn" class="text-indigo-600 hover:text-indigo-800 text-sm underline">
+                        Need a hint?
+                    </button>
+                    <span id="hint-timer" class="text-sm text-gray-500 hidden">
+                        Next hint in: <span class="font-medium">30s</span>
+                    </span>
+                </div>
+                <p id="category" class="text-lg text-indigo-500 italic mb-2 hidden"></p>
+            </div>
+            <p id="word-length" class="text-sm text-gray-500">Letters: <span></span></p>
+        </div>
+
+        <!-- Letter Blocks Input Area -->
+        <div class="space-y-4">
+            <div id="letter-blocks" class="flex justify-center gap-2 mb-4">
+                <!-- Letter blocks will be added dynamically -->
+            </div>
+            <div id="hint-blocks" class="flex justify-center gap-2 mb-4 h-8">
+                <!-- Hint blocks will be added dynamically -->
+            </div>
+            <div id="feedback" class="transition-opacity duration-500 opacity-0">
+                <div id="correct-feedback" class="hidden text-center text-green-500">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+                <div id="incorrect-feedback" class="hidden text-center text-red-500">
+                    <i class="fas fa-times-circle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-center mb-4">Game Over!</h2>
+            <div class="space-y-2 mb-6">
+                <p class="text-center">Final Score: <span id="final-score" class="font-bold"></span></p>
+                <p class="text-center">Best Time: <span id="best-time" class="font-bold"></span></p>
+                <p class="text-center">Words Solved: <span id="words-solved" class="font-bold"></span></p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="new-game-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    New Game
+                </button>
+                <button onclick="window.location.href='/'" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+                    Exit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let currentWord = '';
+        let currentScrambled = '';
+        let score = 0;
+        let startTime = 0;
+        let timer;
+        let words = [];
+        let currentWordIndex = 0;
+        let wordsSolved = 0;
+        let selectedDifficulty = '';
+        let bestTimes = {
+            easy: Infinity,
+            medium: Infinity,
+            hard: Infinity
+        };
+        let usedWords = new Set();
+        let hintInterval;
+        let hintTimeout;
+        let revealedHints = new Set();
+        let currentLetterIndex = 0;
+
+        const modeSelection = document.getElementById('mode-selection');
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const levelDisplay = document.getElementById('level');
+        const scrambledWordDisplay = document.getElementById('scrambled-word');
+        const categoryDisplay = document.getElementById('category');
+        const hintBtn = document.getElementById('hint-btn');
+        const hintTimer = document.getElementById('hint-timer');
+        const wordLengthDisplay = document.getElementById('word-length').querySelector('span');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const bestTimeDisplay = document.getElementById('best-time');
+        const wordsSolvedDisplay = document.getElementById('words-solved');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const feedback = document.getElementById('feedback');
+        const correctFeedback = document.getElementById('correct-feedback');
+        const incorrectFeedback = document.getElementById('incorrect-feedback');
+        const endGameBtn = document.getElementById('end-game-btn');
+        const letterBlocks = document.getElementById('letter-blocks');
+        const hintBlocks = document.getElementById('hint-blocks');
+
+        // Create letter blocks for input
+        function createLetterBlocks(length) {
+            letterBlocks.innerHTML = '';
+            hintBlocks.innerHTML = '';
+            currentLetterIndex = 0;
+
+            // Create input blocks
+            for (let i = 0; i < length; i++) {
+                const blockContainer = document.createElement('div');
+                blockContainer.className = 'relative';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.className = 'w-12 h-12 border-2 border-indigo-300 rounded text-center text-xl font-bold uppercase bg-white focus:outline-none focus:border-indigo-600 focus:bg-indigo-50';
+                input.dataset.index = i;
+                
+                // Handle input
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^A-Za-z]/g, '').toUpperCase();
+                    if (e.target.value) {
+                        const nextInput = findNextEmptyInput(parseInt(e.target.dataset.index));
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                        checkIfComplete();
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value) {
+                        e.preventDefault();
+                        const prevInput = findPreviousEmptyInput(parseInt(e.target.dataset.index));
+                        if (prevInput) {
+                            prevInput.focus();
+                            prevInput.value = '';
+                        }
+                    }
+                });
+
+                // Handle left/right arrows
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const prevInput = findPreviousEmptyInput(parseInt(e.target.dataset.index));
+                        if (prevInput) {
+                            prevInput.focus();
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        const nextInput = findNextEmptyInput(parseInt(e.target.dataset.index));
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }
+                });
+
+                blockContainer.appendChild(input);
+                letterBlocks.appendChild(blockContainer);
+
+                // Create corresponding hint blocks
+                const hintBlock = document.createElement('div');
+                hintBlock.className = 'w-12 h-8 flex items-center justify-center text-sm font-medium text-gray-500';
+                hintBlocks.appendChild(hintBlock);
+            }
+
+            // Focus first input
+            const firstInput = letterBlocks.querySelector('input');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+
+        // Check if all inputs are filled
+        function checkIfComplete() {
+            const inputs = letterBlocks.querySelectorAll('input');
+            const allFilled = Array.from(inputs).every(input => input.value);
+            if (allFilled) {
+                const answer = Array.from(inputs).map(input => input.value).join('').toLowerCase();
+                checkAnswer(answer);
+            }
+        }
+
+        // Check the answer
+        function checkAnswer(userAnswer) {
+            if (userAnswer === currentWord) {
+                showFeedback(true);
+                score += 10;
+                wordsSolved++;
+                scoreDisplay.textContent = score;
+                setTimeout(() => {
+                    displayNewWord();
+                }, 1000);
+            } else {
+                showFeedback(false);
+                setTimeout(() => {
+                    // Clear inputs while preserving hints
+                    const inputs = letterBlocks.querySelectorAll('input');
+                    inputs.forEach((input, index) => {
+                        if (!revealedHints.has(parseInt(input.dataset.index))) {
+                            input.value = '';
+                        }
+                    });
+                    // Focus on the first non-disabled input
+                    const firstNonDisabled = Array.from(inputs).find(input => !input.disabled);
+                    if (firstNonDisabled) {
+                        firstNonDisabled.focus();
+                    }
+                }, 1000);
+            }
+        }
+
+        // Reveal a random unrevealed letter
+        function revealHint() {
+            const unrevealedIndices = [];
+            for (let i = 0; i < currentWord.length; i++) {
+                if (!revealedHints.has(i)) {
+                    unrevealedIndices.push(i);
+                }
+            }
+
+            if (unrevealedIndices.length > 0) {
+                const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
+                revealedHints.add(randomIndex);
+                
+                const hintBlocks = document.getElementById('hint-blocks').children;
+                hintBlocks[randomIndex].textContent = currentWord[randomIndex].toUpperCase();
+                hintBlocks[randomIndex].classList.add('text-indigo-600');
+
+                // Also fill in the input
+                const input = letterBlocks.querySelector(`input[data-index="${randomIndex}"]`);
+                if (input) {
+                    input.value = currentWord[randomIndex].toUpperCase();
+                    input.disabled = true;
+                }
+            }
+        }
+
+        // Cleanup function for when game ends or changes
+        function cleanup() {
+            clearInterval(timer);
+            clearInterval(hintInterval);
+        }
+
+        // Difficulty selection
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                selectedDifficulty = this.dataset.difficulty;
+                modeSelection.classList.add('hidden');
+                gameArea.classList.remove('hidden');
+                await fetchWords(selectedDifficulty);
+            });
+        });
+
+        // Show category hint when requested
+        hintBtn.addEventListener('click', function() {
+            categoryDisplay.classList.remove('hidden');
+            this.classList.add('hidden');
+            hintTimer.classList.remove('hidden');
+            startHintTimer();
+        });
+
+        // Start hint timer
+        function startHintTimer() {
+            let timeLeft = 30; // Changed from 60 to 30 seconds
+            clearInterval(hintInterval);
+            
+            hintInterval = setInterval(() => {
+                timeLeft--;
+                hintTimer.querySelector('span').textContent = timeLeft + 's';
+                
+                if (timeLeft <= 0) {
+                    revealHint();
+                    timeLeft = 30; // Reset to 30 seconds
+                }
+            }, 1000);
+        }
+
+        // Fetch words from the server
+        async function fetchWords(difficulty) {
+            try {
+                const response = await fetch(`/api/words/${difficulty}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch words');
+                }
+                const data = await response.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No words received from server');
+                }
+                words = data;
+                usedWords.clear();
+                startGame();
+            } catch (error) {
+                console.error('Error fetching words:', error);
+                alert('Error loading words. Please try again.');
+            }
+        }
+
+        function scrambleWord(word) {
+            let arr = word.split('');
+            let scrambled;
+            do {
+                arr.sort(() => Math.random() - 0.5);
+                scrambled = arr.join('');
+            } while (scrambled === word);
+            return scrambled.split('').join(' '); // Add space between letters
+        }
+
+        function displayNewWord() {
+            // Reset hints
+            revealedHints.clear();
+            clearInterval(hintInterval);
+            hintTimer.classList.add('hidden');
+            
+            // If we've used all words, reset
+            if (usedWords.size >= words.length) {
+                usedWords.clear();
+            }
+
+            // Get unused words
+            let availableWords = words.filter(word => !usedWords.has(word.word));
+
+            if (availableWords.length === 0) {
+                usedWords.clear();
+                availableWords = words;
+            }
+
+            // Select random word
+            const randomIndex = Math.floor(Math.random() * availableWords.length);
+            const wordData = availableWords[randomIndex];
+            
+            currentWord = wordData.word.toLowerCase();
+            usedWords.add(wordData.word);
+            
+            currentScrambled = scrambleWord(currentWord);
+            scrambledWordDisplay.textContent = currentScrambled.toUpperCase();
+            categoryDisplay.textContent = `Category: ${wordData.category}`;
+            categoryDisplay.classList.add('hidden');
+            hintBtn.classList.remove('hidden');
+            wordLengthDisplay.textContent = currentWord.length;
+            
+            // Create letter blocks for the new word
+            createLetterBlocks(currentWord.length);
+        }
+
+        function showFeedback(isCorrect) {
+            feedback.classList.remove('opacity-0');
+            if (isCorrect) {
+                correctFeedback.classList.remove('hidden');
+                incorrectFeedback.classList.add('hidden');
+            } else {
+                correctFeedback.classList.add('hidden');
+                incorrectFeedback.classList.remove('hidden');
+            }
+            setTimeout(() => {
+                feedback.classList.add('opacity-0');
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const currentTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = currentTime % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            return currentTime;
+        }
+
+        function startGame() {
+            cleanup(); // Clean up before starting new game
+            score = 0;
+            wordsSolved = 0;
+            startTime = Date.now();
+            scoreDisplay.textContent = score;
+            timer = setInterval(updateTimer, 1000);
+            displayNewWord();
+        }
+
+        function endGame() {
+            cleanup(); // Clean up when game ends
+            const finalTime = updateTimer();
+            
+            if (finalTime < bestTimes[selectedDifficulty]) {
+                bestTimes[selectedDifficulty] = finalTime;
+            }
+
+            // Submit final score
+            submitScore('anagram_puzzle', score);
+
+            const bestTime = bestTimes[selectedDifficulty];
+            const bestMinutes = Math.floor(bestTime / 60);
+            const bestSeconds = bestTime % 60;
+
+            finalScoreDisplay.textContent = score;
+            bestTimeDisplay.textContent = bestTime === Infinity ? 'N/A' : 
+                `${bestMinutes}:${bestSeconds.toString().padStart(2, '0')}`;
+            wordsSolvedDisplay.textContent = wordsSolved;
+            gameOverModal.classList.remove('hidden');
+            gameOverModal.classList.add('flex');
+        }
+
+        // Function to submit score to backend
+        async function submitScore(gameType, score) {
+            try {
+                const response = await fetch('/api/games/submit-score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ game_type: gameType, score: score })
+                });
+                const data = await response.json();
+                if (data.highScore) {
+                    console.log('New high score!');
+                }
+            } catch (error) {
+                console.error('Error submitting score:', error);
+            }
+        }
+
+        // Event Listeners
+        endGameBtn.addEventListener('click', endGame);
+        newGameBtn.addEventListener('click', function() {
+            cleanup(); // Clean up when starting new game
+            gameOverModal.classList.remove('flex');
+            gameOverModal.classList.add('hidden');
+            modeSelection.classList.remove('hidden');
+            gameArea.classList.add('hidden');
+        });
+
+        // Clean up when page unloads
+        window.addEventListener('unload', cleanup);
+
+        // Add these helper functions before the startGame function
+        function findNextEmptyInput(currentIndex) {
+            const inputs = letterBlocks.querySelectorAll('input');
+            for (let i = currentIndex + 1; i < inputs.length; i++) {
+                if (!inputs[i].disabled) {
+                    return inputs[i];
+                }
+            }
+            return null;
+        }
+
+        function findPreviousEmptyInput(currentIndex) {
+            const inputs = letterBlocks.querySelectorAll('input');
+            for (let i = currentIndex - 1; i >= 0; i--) {
+                if (!inputs[i].disabled) {
+                    return inputs[i];
+                }
+            }
+            return null;
+        }
+    });
+</script>
+{% endblock %} 

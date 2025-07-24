@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}GameHub - Play Amazing Games{% endblock %}
+
+{% block content %}
+<div class="text-center mb-12">
+    <h1 class="text-4xl font-bold text-indigo-600 mb-4">Welcome to GameHub</h1>
+    <p class="text-gray-600 text-lg">Choose from our collection of exciting games!</p>
+    {% if not current_user.is_authenticated %}
+    <div class="mt-6">
+        <a href="{{ url_for('auth.login') }}" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 mr-4">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition duration-300">Register</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    
+    <!-- Tic Tac Toe -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-pink-500 flex items-center justify-center">
+            <i class="fas fa-th text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-pink-600">Tic Tac Toe</h2>
+            <p class="text-gray-600 mb-4">Classic game of X's and O's with a modern twist! Make your turn..</p>
+            <a href="{{ url_for('games.tictactoe') }}" class="block bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Snakes & Ladders -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-green-500 flex items-center justify-center">
+            <i class="fas fa-dice text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-green-600">Snakes & Ladders</h2>
+            <p class="text-gray-600 mb-4">Roll the dice and climb your way to victory! Make your turn..</p>
+            <a href="{{ url_for('games.snakes_and_ladders') }}" class="block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Chess Game -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-purple-500 flex items-center justify-center">
+            <i class="fas fa-chess-knight text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-purple-600">Chess Game</h2>
+            <p class="text-gray-600 mb-4">Play classic chess against a friend or the computer!</p>
+            <a href="{{ url_for('games.chess_game') }}" class="block bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Anagram Puzzle -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-blue-500 flex items-center justify-center">
+            <i class="fas fa-random text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-blue-600">Anagram Puzzle</h2>
+            <p class="text-gray-600 mb-4">Unscramble words and improve your vocabulary!</p>
+            <a href="{{ url_for('games.anagram_solver') }}" class="block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Wordscapes -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-indigo-500 flex items-center justify-center">
+            <i class="fas fa-spell-check text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-indigo-600">Wordscapes</h2>
+            <p class="text-gray-600 mb-4">Create words from a circle of letters in this relaxing word puzzle!</p>
+            <a href="{{ url_for('games.wordscapes') }}" class="block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+
+    <!-- Sudoku Puzzle -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
+        <div class="h-48 bg-green-500 flex items-center justify-center">
+            <i class="fas fa-th-large text-6xl text-white"></i>
+        </div>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-2 text-green-600">Sudoku Puzzle</h2>
+            <p class="text-gray-600 mb-4">Challenge your logic and number skills! Improve your IQ</p>
+            <a href="{{ url_for('games.sudoku_puzzle') }}" class="block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center">Play Now</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

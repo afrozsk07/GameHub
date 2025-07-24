@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Sudoku Puzzle - GameHub{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-center mb-8 text-green-600">Sudoku Puzzle</h1>
+    <div class="flex flex-col md:flex-row gap-8">
+        <div class="flex-1 flex flex-col items-center">
+            <div class="mb-4">
+                <label for="difficulty" class="font-semibold mr-2">Difficulty:</label>
+                <select id="difficulty" class="form-select rounded border-gray-300">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <button id="newGameBtn" class="ml-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">New Game</button>
+            </div>
+            <div id="sudoku-board" class="grid grid-cols-9 gap-1 bg-gray-200 p-2 rounded-lg shadow-inner"></div>
+            <div class="mt-4 flex gap-4">
+                <button id="checkBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Check Solution</button>
+                <button id="solveBtn" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700">Show Solution</button>
+            </div>
+            <div id="feedback" class="mt-4 text-lg font-semibold text-center"></div>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center">
+            <div class="bg-green-50 rounded-lg p-6 shadow w-full max-w-xs">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Time</span>
+                    <span id="timer" class="font-bold text-green-700">00:00</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Mistakes</span>
+                    <span id="mistakes" class="font-bold text-red-600">0</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Score</span>
+                    <span id="score" class="font-bold text-green-700">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sudoku generation and solving utilities
+function generateSudoku(difficulty) {
+    // Now with 4 puzzles per difficulty, randomly select one
+    const puzzles = {
+        easy: [
+            [5,3,null,null,7,null,null,null,null],
+            [6,null,null,1,9,5,null,null,null],
+            [null,9,8,null,null,null,null,6,null],
+            [8,null,null,null,6,null,null,null,3],
+            [4,null,null,8,null,3,null,null,1],
+            [7,null,null,null,2,null,null,null,6],
+            [null,6,null,null,null,null,2,8,null],
+            [null,null,null,4,1,9,null,null,5],
+            [null,null,null,null,8,null,null,7,9],
+            // Puzzle 2
+            [null,2,null,6,null,8,null,null,null],
+            [5,8,null,null,null,9,7,null,null],
+            [null,null,null,null,4,null,null,null,null],
+            [3,7,null,null,null,null,5,null,null],
+            [6,null,null,null,null,null,null,null,4],
+            [null,null,8,null,null,null,null,1,3],
+            [null,null,null,null,2,null,null,null,null],
+            [null,null,9,8,null,null,null,3,6],
+            [null,null,null,3,null,6,null,9,null],
+            // Puzzle 3
+            [1,null,null,4,8,9,null,null,6],
+            [7,3,null,null,null,null,null,4,null],
+            [null,null,null,null,null,1,2,9,5],
+            [null,null,7,1,2,null,6,null,null],
+            [5,null,null,7,null,3,null,null,8],
+            [null,null,6,null,9,5,7,null,null],
+            [9,1,4,6,null,null,null,null,null],
+            [null,2,null,null,null,null,null,3,7],
+            [8,null,null,5,1,2,null,null,4],
+            // Puzzle 4
+            [null,null,4,null,null,null,8,null,5],
+            [null,3,null,null,6,null,null,4,null],
+            [2,null,null,8,null,5,null,null,1],
+            [null,9,null,null,3,null,null,8,null],
+            [null,null,1,null,null,null,6,null,null],
+            [null,6,null,null,7,null,null,2,null],
+            [1,null,null,9,null,6,null,null,7],
+            [null,8,null,null,2,null,null,6,null],
+            [7,null,3,null,null,null,4,null,null]
+        ],
+        medium: [
+            // Puzzle 1
+            [null,2,null,6,null,8,null,null,null],
+            [5,8,null,null,null,9,7,null,null],
+            [null,null,null,null,4,null,null,null,null],
+            [3,7,null,null,null,null,5,null,null],
+            [6,null,null,null,null,null,null,null,4],
+            [null,null,8,null,null,null,null,1,3],
+            [null,null,null,null,2,null,null,null,null],
+            [null,null,9,8,null,null,null,3,6],
+            [null,null,null,3,null,6,null,9,null],
+            // Puzzle 2
+            [null,null,6,null,null,3,null,7,null],
+            [null,8,null,null,7,null,null,2,null],
+            [2,null,null,null,null,null,null,null,1],
+            [8,null,null,5,null,2,null,null,4],
+            [null,7,null,null,4,null,null,5,null],
+            [4,null,null,1,null,9,null,null,8],
+            [5,null,null,null,null,null,null,null,2],
+            [null,6,null,null,1,null,null,9,null],
+            [null,null,1,null,null,8,null,null,null],
+            // Puzzle 3
+            [null,6,null,null,null,null,4,null,null],
+            [7,null,null,null,9,null,null,null,2],
+            [null,null,2,1,null,5,3,null,null],
+            [null,5,null,null,6,null,null,7,null],
+            [null,null,7,null,null,null,2,null,null],
+            [null,4,null,null,8,null,null,1,null],
+            [null,null,5,2,null,6,9,null,null],
+            [8,null,null,null,1,null,null,null,6],
+            [null,null,9,null,null,null,null,4,null],
+            // Puzzle 4
+            [null,1,null,null,2,null,null,4,null],
+            [null,null,7,5,null,6,1,null,null],
+            [null,null,null,null,9,null,null,null,null],
+            [2,null,null,7,null,4,null,null,8],
+            [null,6,null,null,null,null,null,2,null],
+            [7,null,null,1,null,2,null,null,9],
+            [null,null,null,null,8,null,null,null,null],
+            [null,null,2,6,null,9,7,null,null],
+            [null,7,null,null,1,null,null,5,null]
+        ],
+        hard: [
+            // Puzzle 1
+            [null,null,5,3,null,null,null,null,null],
+            [8,null,null,null,null,null,null,2,null],
+            [null,7,null,null,1,null,5,null,null],
+            [4,null,null,null,null,5,3,null,null],
+            [null,1,null,null,7,null,null,null,6],
+            [null,null,3,2,null,null,null,8,null],
+            [null,6,null,5,null,null,null,null,9],
+            [null,null,4,null,null,null,null,3,null],
+            [null,null,null,null,null,9,7,null,null],
+            // Puzzle 2
+            [null,4,null,null,6,null,null,null,7],
+            [null,null,2,null,null,8,null,null,null],
+            [5,null,null,null,null,null,null,null,3],
+            [null,null,null,7,null,2,null,null,null],
+            [null,9,null,null,null,null,null,1,null],
+            [null,null,null,6,null,3,null,null,null],
+            [7,null,null,null,null,null,null,null,8],
+            [null,null,6,null,null,1,null,null,null],
+            [2,null,null,null,8,null,null,null,5],
+            // Puzzle 3
+            [null,null,8,null,1,null,null,null,2],
+            [null,7,null,null,null,null,null,6,null],
+            [6,null,null,2,null,7,null,null,8],
+            [null,null,3,null,null,null,5,null,null],
+            [null,2,null,null,8,null,null,7,null],
+            [null,null,5,null,null,null,1,null,null],
+            [2,null,null,8,null,6,null,null,9],
+            [null,6,null,null,null,null,null,3,null],
+            [7,null,null,null,2,null,null,null,4],
+            // Puzzle 4
+            [null,5,null,null,3,null,null,8,null],
+            [null,null,7,null,null,2,null,null,null],
+            [6,null,null,null,null,null,null,null,1],
+            [null,null,null,5,null,7,null,null,null],
+            [null,2,null,null,8,null,null,6,null],
+            [null,null,null,1,null,6,null,null,null],
+            [1,null,null,null,null,null,null,null,7],
+            [null,null,3,null,null,4,null,null,null],
+            [null,7,null,null,6,null,null,2,null]
+        ]
+    };
+    // Randomly select one puzzle for the chosen difficulty
+    const pool = puzzles[difficulty];
+    const puzzleCount = Math.floor(pool.length / 9); // Each puzzle is 9 rows
+    const puzzleIndex = Math.floor(Math.random() * puzzleCount);
+    return pool.slice(puzzleIndex * 9, (puzzleIndex + 1) * 9).map(row => row.slice());
+}
+
+function solveSudoku(board) {
+    // Simple backtracking solver
+    function isValid(board, row, col, num) {
+        for (let i = 0; i < 9; i++) {
+            if (board[row][i] === num || board[i][col] === num) return false;
+        }
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (board[startRow + i][startCol + j] === num) return false;
+            }
+        }
+        return true;
+    }
+    function solve(board) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (!board[row][col]) {
+                    for (let num = 1; num <= 9; num++) {
+                        if (isValid(board, row, col, num)) {
+                            board[row][col] = num;
+                            if (solve(board)) return true;
+                            board[row][col] = null;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    const copy = board.map(row => row.slice());
+    solve(copy);
+    return copy;
+}
+
+// UI and game logic
+let originalBoard = [];
+let currentBoard = [];
+let solutionBoard = [];
+let selectedCell = null;
+let timer = 0;
+let timerInterval = null;
+let mistakes = 0;
+let score = 0;
+
+function renderBoard(board) {
+    const boardDiv = document.getElementById('sudoku-board');
+    boardDiv.innerHTML = '';
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const cell = document.createElement('input');
+            cell.type = 'text';
+            cell.maxLength = 1;
+            cell.className = 'w-10 h-10 text-center border border-gray-400 rounded bg-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-400';
+            if (originalBoard[row][col]) {
+                cell.value = originalBoard[row][col];
+                cell.disabled = true;
+                cell.classList.add('bg-gray-100', 'text-gray-500');
+            } else {
+                cell.value = board[row][col] ? board[row][col] : '';
+                cell.addEventListener('focus', () => selectedCell = {row, col});
+                cell.addEventListener('input', (e) => handleInput(e, row, col));
+            }
+            // Thicker borders for 3x3 blocks
+            if (col % 3 === 0) cell.style.borderLeftWidth = '3px';
+            if (row % 3 === 0) cell.style.borderTopWidth = '3px';
+            if (col === 8) cell.style.borderRightWidth = '3px';
+            if (row === 8) cell.style.borderBottomWidth = '3px';
+            boardDiv.appendChild(cell);
+        }
+    }
+}
+
+function handleInput(e, row, col) {
+    const val = e.target.value.replace(/[^1-9]/g, '');
+    e.target.value = val;
+    if (val) {
+        currentBoard[row][col] = parseInt(val);
+        if (solutionBoard[row][col] !== parseInt(val)) {
+            mistakes++;
+            document.getElementById('mistakes').textContent = mistakes;
+            e.target.classList.add('bg-red-200');
+            setTimeout(() => e.target.classList.remove('bg-red-200'), 500);
+        } else {
+            score += 10;
+            document.getElementById('score').textContent = score;
+        }
+    } else {
+        currentBoard[row][col] = null;
+    }
+}
+
+function startTimer() {
+    timer = 0;
+    document.getElementById('timer').textContent = '00:00';
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timer++;
+        const min = String(Math.floor(timer / 60)).padStart(2, '0');
+        const sec = String(timer % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${min}:${sec}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+}
+
+function checkSolution() {
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            if (currentBoard[row][col] !== solutionBoard[row][col]) {
+                document.getElementById('feedback').textContent = 'Incorrect solution. Try again!';
+                document.getElementById('feedback').className = 'mt-4 text-lg font-semibold text-center text-red-600';
+                return false;
+            }
+        }
+    }
+    stopTimer();
+    document.getElementById('feedback').textContent = `Congratulations! You solved the puzzle in ${document.getElementById('timer').textContent} with ${mistakes} mistakes.`;
+    document.getElementById('feedback').className = 'mt-4 text-lg font-semibold text-center text-green-600';
+    submitScore('sudoku_puzzle', score);
+    return true;
+}
+
+function showSolution() {
+    renderBoard(solutionBoard);
+    stopTimer();
+    document.getElementById('feedback').textContent = 'Solution shown. Try a new puzzle!';
+    document.getElementById('feedback').className = 'mt-4 text-lg font-semibold text-center text-blue-600';
+}
+
+function newGame() {
+    const difficulty = document.getElementById('difficulty').value;
+    originalBoard = generateSudoku(difficulty);
+    currentBoard = originalBoard.map(row => row.slice());
+    solutionBoard = solveSudoku(originalBoard);
+    mistakes = 0;
+    score = 0;
+    document.getElementById('mistakes').textContent = '0';
+    document.getElementById('score').textContent = '0';
+    document.getElementById('feedback').textContent = '';
+    renderBoard(currentBoard);
+    startTimer();
+}
+
+async function submitScore(gameType, score) {
+    try {
+        await fetch('/api/games/submit-score', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ game_type: gameType, score: score })
+        });
+    } catch (error) {
+        console.error('Error submitting score:', error);
+    }
+}
+
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+document.getElementById('checkBtn').addEventListener('click', checkSolution);
+document.getElementById('solveBtn').addEventListener('click', showSolution);
+document.getElementById('difficulty').addEventListener('change', newGame);
+
+// Start first game
+window.addEventListener('DOMContentLoaded', newGame);
+</script>
+{% endblock %} 

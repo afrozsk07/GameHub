@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Tic Tac Toe - GameHub{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-8">Tic Tac Toe</h1>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Game Controls -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-3">
+                <label for="opponentSelect" class="text-gray-700 font-medium">Opponent:</label>
+                <div class="relative">
+                    <button id="opponentDropdown" type="button" class="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-10 text-left">
+                        <span id="selectedOpponent">
+                            <i class="fas fa-user mr-2"></i>Human
+                        </span>
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </span>
+                    </button>
+                    <div id="opponentOptions" class="hidden absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50" data-value="human">
+                            <span class="flex items-center">
+                                <i class="fas fa-user mr-2"></i>
+                                <span>Human</span>
+                            </span>
+                        </div>
+                        <div class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50" data-value="computer">
+                            <span class="flex items-center">
+                                <i class="fas fa-robot mr-2"></i>
+                                <span>Computer</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="newGameBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">
+                New Game
+            </button>
+            </div>
+
+        <!-- Game Status -->
+        <div id="gameStatus" class="text-center mb-6 text-xl font-semibold text-gray-700">
+            Your turn (X)
+        </div>
+
+        <!-- Game Board -->
+        <div class="relative">
+            <div id="board" class="grid grid-cols-3 gap-3 mb-6 p-3 bg-white rounded-xl shadow-lg">
+            {% for i in range(9) %}
+                <button class="cell w-full h-24 bg-sky-100 hover:bg-sky-200 text-4xl font-bold rounded-lg transition-all duration-200 
+                             border-2 border-sky-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        data-index="{{ i }}">
+                </button>
+            {% endfor %}
+        </div>
+
+            <!-- Game End Overlay -->
+            <div id="gameEndOverlay" class="hidden absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                <div class="text-center transform scale-0 transition-transform duration-300" id="gameEndContent">
+                    <div id="gameEndMessage" class="text-4xl font-bold text-white mb-4 animate-bounce"></div>
+                    <button id="playAgainBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200 transform hover:scale-105">
+                        Play Again
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Board -->
+        <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-600">Player X</div>
+                <div id="scoreX" class="text-2xl font-bold text-indigo-600">0</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-600">Draws</div>
+                <div id="scoreDraws" class="text-2xl font-bold text-gray-600">0</div>
+            </div>
+            <div class="bg-pink-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-600">Player O</div>
+                <div id="scoreO" class="text-2xl font-bold text-pink-600">0</div>
+    </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes fadeInScale {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.fade-in-scale {
+    animation: fadeInScale 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPlayer = 'X';
+    let gameBoard = Array(9).fill('');
+    let gameActive = true;
+    let vsComputer = false;
+    let scores = { X: 0, O: 0, draws: 0 };
+    let computerStarts = false; // Track if computer should start next game
+
+    const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+        [0, 4, 8], [2, 4, 6] // Diagonals
+    ];
+
+    const cells = document.querySelectorAll('.cell');
+    const gameStatus = document.getElementById('gameStatus');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const opponentDropdown = document.getElementById('opponentDropdown');
+    const opponentOptions = document.getElementById('opponentOptions');
+    const selectedOpponent = document.getElementById('selectedOpponent');
+
+    const gameEndOverlay = document.getElementById('gameEndOverlay');
+    const gameEndContent = document.getElementById('gameEndContent');
+    const gameEndMessage = document.getElementById('gameEndMessage');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    // Dropdown functionality
+    opponentDropdown.addEventListener('click', () => {
+        opponentOptions.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!opponentDropdown.contains(e.target)) {
+            opponentOptions.classList.add('hidden');
+        }
+    });
+
+    // Handle option selection
+    opponentOptions.querySelectorAll('div[data-value]').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const icon = value === 'human' ? 'fa-user' : 'fa-robot';
+            selectedOpponent.innerHTML = `<i class="fas ${icon} mr-2"></i>${value.charAt(0).toUpperCase() + value.slice(1)}`;
+            opponentOptions.classList.add('hidden');
+            vsComputer = value === 'computer';
+            resetGame();
+        });
+    });
+
+    // Add click handlers
+    cells.forEach(cell => {
+        cell.addEventListener('click', () => handleCellClick(cell));
+    });
+
+    newGameBtn.addEventListener('click', resetGame);
+
+    playAgainBtn.addEventListener('click', () => {
+        hideGameEndOverlay();
+        setTimeout(resetGame, 500);
+    });
+
+    function handleCellClick(cell) {
+        const index = cell.dataset.index;
+        
+        if (gameBoard[index] || !gameActive) return;
+        
+        makeMove(index);
+        
+        if (vsComputer && gameActive) {
+            setTimeout(computerMove, 500);
+        }
+    }
+
+    function updateGameStatus() {
+        if (vsComputer) {
+            if (currentPlayer === 'X') {
+                gameStatus.textContent = "Your turn";
+            } else {
+                gameStatus.textContent = "Computer's turn";
+            }
+        } else {
+            gameStatus.textContent = `Player ${currentPlayer === 'X' ? '1' : '2'}'s turn`;
+        }
+    }
+
+    function makeMove(index) {
+        gameBoard[index] = currentPlayer;
+        cells[index].textContent = currentPlayer;
+        cells[index].classList.add(currentPlayer === 'X' ? 'text-indigo-600' : 'text-pink-600');
+        cells[index].classList.add('bg-white', 'border-sky-400', 'shadow-inner');
+        cells[index].classList.remove('hover:shadow-lg', 'hover:-translate-y-0.5', 'hover:bg-sky-200');
+
+        if (checkWin()) {
+            const message = vsComputer ? 
+                (currentPlayer === 'X' ? 'You Win! 🎉' : 'Computer Wins! 😔') :
+                `Player ${currentPlayer === 'X' ? '1' : '2'} Wins! 🎉`;
+            scores[currentPlayer]++;
+            updateScoreBoard();
+            gameActive = false;
+            
+            // Submit score to backend
+            if (vsComputer) {
+                const score = currentPlayer === 'X' ? 100 : -50; // Win = 100 points, Loss = -50 points
+                submitScore('tic_tac_toe', score);
+            }
+            
+            setTimeout(() => showGameEndOverlay(message), 300);
+            return;
+        }
+
+        if (checkDraw()) {
+            scores.draws++;
+            updateScoreBoard();
+            gameActive = false;
+            
+            // Submit draw score
+            if (vsComputer) {
+                submitScore('tic_tac_toe', 25); // Draw = 25 points
+            }
+            
+            setTimeout(() => showGameEndOverlay("It's a Draw! 🤝"), 300);
+            return;
+        }
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateGameStatus();
+    }
+
+    function computerMove() {
+        let bestScore = -Infinity;
+        let bestMove = -1;
+
+        // Find the best move using minimax algorithm
+        for (let i = 0; i < 9; i++) {
+            if (!gameBoard[i]) {
+                gameBoard[i] = 'O';
+                let score = minimax(gameBoard, 0, false);
+                gameBoard[i] = '';
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = i;
+                }
+            }
+        }
+
+        if (bestMove !== -1) {
+            makeMove(bestMove);
+        }
+    }
+
+    function minimax(board, depth, isMaximizing) {
+        // Check terminal states
+        if (checkWinForPlayer('O')) return 10 - depth;
+        if (checkWinForPlayer('X')) return depth - 10;
+        if (checkDraw()) return 0;
+
+        if (isMaximizing) {
+            let bestScore = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (!board[i]) {
+                    board[i] = 'O';
+                    let score = minimax(board, depth + 1, false);
+                    board[i] = '';
+                    bestScore = Math.max(score, bestScore);
+                }
+            }
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (!board[i]) {
+                    board[i] = 'X';
+                    let score = minimax(board, depth + 1, true);
+                    board[i] = '';
+                    bestScore = Math.min(score, bestScore);
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    function checkWinForPlayer(player) {
+        return winPatterns.some(pattern => {
+            return pattern.every(index => {
+                return gameBoard[index] === player;
+            });
+        });
+    }
+
+    function checkWin() {
+        return checkWinForPlayer(currentPlayer);
+    }
+
+    function checkDraw() {
+        return gameBoard.every(cell => cell !== '');
+    }
+
+    function resetGame() {
+        gameBoard = Array(9).fill('');
+        gameActive = true;
+        
+        // In computer mode, alternate who starts
+        if (vsComputer) {
+            currentPlayer = computerStarts ? 'O' : 'X';
+            computerStarts = !computerStarts; // Toggle for next game
+        } else {
+            currentPlayer = 'X';
+        }
+
+        cells.forEach(cell => {
+            cell.textContent = '';
+            cell.classList.remove(
+                'text-indigo-600', 'text-pink-600', 
+                'bg-white', 'border-sky-400', 'shadow-inner'
+            );
+            cell.classList.add(
+                'hover:shadow-lg', 'hover:-translate-y-0.5', 
+                'hover:bg-sky-200'
+            );
+        });
+        updateGameStatus();
+        
+        // If it's computer's turn (O), make the move
+        if (vsComputer && currentPlayer === 'O') {
+            setTimeout(computerMove, 500);
+        }
+    }
+
+    function updateScoreBoard() {
+        document.getElementById('scoreX').textContent = scores.X;
+        document.getElementById('scoreO').textContent = scores.O;
+        document.getElementById('scoreDraws').textContent = scores.draws;
+    }
+
+    function showGameEndOverlay(message) {
+        gameEndMessage.textContent = message;
+        gameEndOverlay.classList.remove('hidden');
+        gameEndContent.classList.add('fade-in-scale');
+        gameEndContent.style.transform = 'scale(1)';
+    }
+
+    function hideGameEndOverlay() {
+        gameEndOverlay.classList.add('fade-out');
+        gameEndContent.classList.remove('fade-in-scale');
+        gameEndContent.style.transform = 'scale(0)';
+        setTimeout(() => {
+            gameEndOverlay.classList.remove('fade-out');
+            gameEndOverlay.classList.add('hidden');
+        }, 500);
+    }
+
+    // Update score display labels based on game mode
+    function updateScoreBoardLabels() {
+        const playerXLabel = document.querySelector('#scoreX').previousElementSibling;
+        const playerOLabel = document.querySelector('#scoreO').previousElementSibling;
+        
+        if (vsComputer) {
+            playerXLabel.textContent = 'You';
+            playerOLabel.textContent = 'Computer';
+        } else {
+            playerXLabel.textContent = 'Player 1';
+            playerOLabel.textContent = 'Player 2';
+        }
+    }
+
+    // Initial setup
+    updateGameStatus();
+    updateScoreBoardLabels();
+
+    // Update labels when game mode changes
+    opponentOptions.querySelectorAll('div[data-value]').forEach(option => {
+        option.addEventListener('click', updateScoreBoardLabels);
+    });
+
+    // Function to submit score to backend
+    async function submitScore(gameType, score) {
+        try {
+            const response = await fetch('/api/games/submit-score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ game_type: gameType, score: score })
+            });
+            const data = await response.json();
+            if (data.highScore) {
+                // Maybe show a high score notification in the future
+                console.log('New high score!');
+            }
+        } catch (error) {
+            console.error('Error submitting score:', error);
+        }
+    }
+});
+</script>
+{% endblock %} 

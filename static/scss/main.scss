@@ -1,0 +1,127 @@
+// Custom Variables
+$primary-color: #4f46e5;
+$secondary-color: #818cf8;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$text-dark: #1f2937;
+$text-light: #9ca3af;
+
+// Custom Animations
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+// Custom Classes
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-in-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+// Game Card Hover Effects
+.game-card {
+  transition: all 0.3s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Button Styles
+.btn {
+  @apply px-4 py-2 rounded-lg transition duration-300;
+  
+  &-primary {
+    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+  }
+  
+  &-secondary {
+    @apply bg-purple-600 text-white hover:bg-purple-700;
+  }
+  
+  &-success {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  &-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+}
+
+// Form Styles
+.form-input {
+  @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500;
+}
+
+// Game Board Styles
+.game-board {
+  @apply grid gap-4 p-4 bg-white rounded-lg shadow-lg;
+  
+  &.tictactoe {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  &.memory {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// Score Display
+.score-display {
+  @apply text-2xl font-bold text-indigo-600;
+  
+  &.highlight {
+    @apply animate-pulse text-green-600;
+  }
+}
+
+// Toast Notifications
+.toast {
+  @apply fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg;
+  
+  &-success {
+    @apply bg-green-600 text-white;
+  }
+  
+  &-error {
+    @apply bg-red-600 text-white;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .game-board {
+    &.memory {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .btn {
+    @apply w-full;
+  }
+} 
