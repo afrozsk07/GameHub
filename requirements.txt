@@ -1,12 +1,9 @@
 Flask==3.0.2
 Flask-SQLAlchemy==3.1.1
-Flask-Login==0.6.3
 Werkzeug==3.0.1
 python-dotenv==1.0.1
-Flask-WTF==1.2.1
 Flask-Migrate==4.0.5
 Flask-Assets==2.1.0
 libsass==0.22.0
 cssmin==0.2.0
 jsmin==3.0.1 
-email_validator 

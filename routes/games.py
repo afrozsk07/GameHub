@@ -1,15 +1,15 @@
-from flask import Blueprint, render_template, jsonify, request
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, jsonify, request, session
 from models import db, Score, WordList
 from datetime import datetime
 import random
 import os
 import importlib
 import sys
+import uuid
 
-games = Blueprint('games', __name__)
+games_bp = Blueprint('games', __name__)
 
-@games.route('/api/debug-words')
+@games_bp.route('/api/debug-words')
 def debug_words():
     try:
         # Force reload the word database module
@@ -41,8 +41,7 @@ def debug_words():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-@games.route('/api/words/<difficulty>')
-@login_required
+@games_bp.route('/api/words/<difficulty>')
 def get_words(difficulty):
     try:
         print("\n=== Word Database Debug ===")
@@ -80,28 +79,27 @@ def get_words(difficulty):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-@games.route('/tictactoe')
-@login_required
+@games_bp.route('/tictactoe')
 def tictactoe():
     return render_template('games/tictactoe.html')
 
-@games.route('/snakes_and_ladders')
-@login_required
+@games_bp.route('/snakes_and_ladders')
 def snakes_and_ladders():
     return render_template('games/snakes_and_ladders.html')
 
-@games.route('/chess_game')
-@login_required
+@games_bp.route('/chess_game')
 def chess_game():
     return render_template('games/chess_game.html')
 
-@games.route('/anagram-solver')
-@login_required
+@games_bp.route('/anagram-solver')
 def anagram_solver():
     return render_template('games/anagram_solver.html')
 
-@games.route('/api/test-words')
-@login_required
+@games_bp.route('/tetris')
+def tetris():
+    return render_template('games/tetris.html')
+
+@games_bp.route('/api/test-words')
 def test_words():
     try:
         # Force reload the word database module
@@ -122,16 +120,16 @@ def test_words():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@games.route('/save-score', methods=['POST'])
-@login_required
+@games_bp.route('/save-score', methods=['POST'])
 def save_score():
     data = request.get_json()
     game_name = data.get('game')
     score = data.get('score')
+    player_name = data.get('player_name', 'Anonymous')
     
     if game_name and score:
         game_score = Score(
-            user_id=current_user.id,
+            player_name=player_name,
             game_type=game_name,
             score=score,
             timestamp=datetime.utcnow()
@@ -142,7 +140,6 @@ def save_score():
     
     return jsonify({'status': 'error', 'message': 'Invalid data'}), 400
 
-@games.route('/sudoku_puzzle')
-@login_required
+@games_bp.route('/sudoku_puzzle')
 def sudoku_puzzle():
     return render_template('games/sudoku_puzzle.html') 

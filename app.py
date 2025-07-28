@@ -1,8 +1,7 @@
 from flask import Flask, render_template
 from flask_assets import Bundle
 import os
-from extensions import db, login_manager, migrate, assets
-from models import User
+from extensions import db, migrate, assets
 
 def create_app():
     app = Flask(__name__)
@@ -13,7 +12,6 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    login_manager.init_app(app)
     assets.init_app(app)
 
     # Asset bundles
@@ -22,17 +20,11 @@ def create_app():
     assets.register('css', css)
     assets.register('js', js)
 
-    @login_manager.user_loader
-    def load_user(id):
-        return User.query.get(int(id))
-
     # Import routes after app initialization to avoid circular imports
-    from auth import auth_bp
     from api import api_bp
     from routes import games_bp
 
     # Register blueprints
-    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(api_bp)
     app.register_blueprint(games_bp, url_prefix='/games')
 

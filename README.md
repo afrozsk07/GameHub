@@ -1,6 +1,6 @@
 # GameHub
 
-GameHub is a Python-based web application featuring a collection of engaging games, built with Flask and modern web technologies. The platform offers a beautiful, responsive UI, smooth animations, and a rich user experience with authentication, profiles, achievements, and leaderboards.
+GameHub is a Python-based web application featuring a collection of engaging games, built with Flask and modern web technologies. The platform offers a beautiful, responsive UI, smooth animations, and a rich user experience with games accessible to all users without requiring accounts.
 
 ## Games Available
 
@@ -14,20 +14,20 @@ GameHub is a Python-based web application featuring a collection of engaging gam
 ## Features
 
 - Modern, responsive UI with Tailwind CSS
-- User authentication (register, login, logout) and profile management
-- Game statistics, achievements, and recent activity on user profiles
+- No account required - games accessible to all users
+- Session-based game state management
 - Persistent score tracking and leaderboards
 - Beautiful animations and transitions
 - Cross-platform compatibility (desktop and mobile)
-- Save and resume game progress
-- Secure password hashing and session management
+- Save and resume game progress using browser sessions
+- Secure session management
 
 ## Technical Stack
 
 - **Backend**: Python Flask
 - **Database**: SQLite with SQLAlchemy ORM
 - **Frontend**: HTML5, Tailwind CSS, JavaScript
-- **Authentication**: Flask-Login
+- **Session Management**: Flask Sessions
 - **Asset Management**: Flask-Assets
 - **Dependencies**: See requirements.txt
 
@@ -73,16 +73,14 @@ GameHub is a Python-based web application featuring a collection of engaging gam
 GameHub/
 ├── app.py              # Main application file
 ├── models.py           # Database models
-├── auth.py             # Authentication and profile routes
 ├── api.py              # API endpoints for scores, state, word lists
+├── games.py            # Game route handlers
 ├── routes/             # Game route blueprints
-├── forms.py            # WTForms definitions
 ├── requirements.txt    # Project dependencies
 ├── static/             # Static files (CSS, JS, images)
 ├── templates/          # HTML templates
 │   ├── base.html       # Base template
 │   ├── index.html      # Home page
-│   ├── auth/           # Auth/profile templates
 │   ├── games/          # Game-specific templates
 │   └── errors/         # Error pages
 └── instance/

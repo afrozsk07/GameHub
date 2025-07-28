@@ -6,12 +6,6 @@
 <div class="text-center mb-12">
     <h1 class="text-4xl font-bold text-indigo-600 mb-4">Welcome to GameHub</h1>
     <p class="text-gray-600 text-lg">Choose from our collection of exciting games!</p>
-    {% if not current_user.is_authenticated %}
-    <div class="mt-6">
-        <a href="{{ url_for('auth.login') }}" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 mr-4">Login</a>
-        <a href="{{ url_for('auth.register') }}" class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition duration-300">Register</a>
-    </div>
-    {% endif %}
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -35,57 +29,57 @@
         </div>
         <div class="p-6">
             <h2 class="text-2xl font-bold mb-2 text-green-600">Snakes & Ladders</h2>
-            <p class="text-gray-600 mb-4">Roll the dice and climb your way to victory! Make your turn..</p>
+            <p class="text-gray-600 mb-4">Roll the dice and climb the ladder! Watch out for snakes!</p>
             <a href="{{ url_for('games.snakes_and_ladders') }}" class="block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center">Play Now</a>
         </div>
     </div>
 
     <!-- Chess Game -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
-        <div class="h-48 bg-purple-500 flex items-center justify-center">
-            <i class="fas fa-chess-knight text-6xl text-white"></i>
+        <div class="h-48 bg-yellow-500 flex items-center justify-center">
+            <i class="fas fa-chess text-6xl text-white"></i>
         </div>
         <div class="p-6">
-            <h2 class="text-2xl font-bold mb-2 text-purple-600">Chess Game</h2>
-            <p class="text-gray-600 mb-4">Play classic chess against a friend or the computer!</p>
-            <a href="{{ url_for('games.chess_game') }}" class="block bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300 text-center">Play Now</a>
+            <h2 class="text-2xl font-bold mb-2 text-yellow-600">Chess Game</h2>
+            <p class="text-gray-600 mb-4">Strategic chess gameplay with multiple difficulty levels!</p>
+            <a href="{{ url_for('games.chess_game') }}" class="block bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition duration-300 text-center">Play Now</a>
         </div>
     </div>
 
-    <!-- Anagram Puzzle -->
+    <!-- Tetris -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
         <div class="h-48 bg-blue-500 flex items-center justify-center">
-            <i class="fas fa-random text-6xl text-white"></i>
+            <i class="fas fa-cubes text-6xl text-white"></i>
         </div>
         <div class="p-6">
-            <h2 class="text-2xl font-bold mb-2 text-blue-600">Anagram Puzzle</h2>
-            <p class="text-gray-600 mb-4">Unscramble words and improve your vocabulary!</p>
-            <a href="{{ url_for('games.anagram_solver') }}" class="block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-center">Play Now</a>
+            <h2 class="text-2xl font-bold mb-2 text-blue-600">Tetris</h2>
+            <p class="text-gray-600 mb-4">Classic block-stacking puzzle game with increasing speed!</p>
+            <a href="{{ url_for('games.tetris') }}" class="block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-center">Play Now</a>
         </div>
     </div>
 
-    <!-- Wordscapes -->
+    <!-- Anagram Solver -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
-        <div class="h-48 bg-indigo-500 flex items-center justify-center">
-            <i class="fas fa-spell-check text-6xl text-white"></i>
+        <div class="h-48 bg-purple-500 flex items-center justify-center">
+            <i class="fas fa-font text-6xl text-white"></i>
         </div>
         <div class="p-6">
-            <h2 class="text-2xl font-bold mb-2 text-indigo-600">Wordscapes</h2>
-            <p class="text-gray-600 mb-4">Create words from a circle of letters in this relaxing word puzzle!</p>
-            <a href="{{ url_for('games.wordscapes') }}" class="block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 text-center">Play Now</a>
+            <h2 class="text-2xl font-bold mb-2 text-purple-600">Anagram Solver</h2>
+            <p class="text-gray-600 mb-4">Unscramble letters to form words and improve your vocabulary!</p>
+            <a href="{{ url_for('games.anagram_solver') }}" class="block bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300 text-center">Play Now</a>
         </div>
     </div>
 
     <!-- Sudoku Puzzle -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
-        <div class="h-48 bg-green-500 flex items-center justify-center">
+        <div class="h-48 bg-red-500 flex items-center justify-center">
             <i class="fas fa-th-large text-6xl text-white"></i>
         </div>
         <div class="p-6">
-            <h2 class="text-2xl font-bold mb-2 text-green-600">Sudoku Puzzle</h2>
-            <p class="text-gray-600 mb-4">Challenge your logic and number skills! Improve your IQ</p>
-            <a href="{{ url_for('games.sudoku_puzzle') }}" class="block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center">Play Now</a>
+            <h2 class="text-2xl font-bold mb-2 text-red-600">Sudoku Puzzle</h2>
+            <p class="text-gray-600 mb-4">Challenge your logic with classic Sudoku puzzles!</p>
+            <a href="{{ url_for('games.sudoku_puzzle') }}" class="block bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-center">Play Now</a>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
